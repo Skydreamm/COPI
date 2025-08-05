@@ -1,0 +1,121 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Étape 38</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: Arial, sans-serif;
+        }
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+        #code {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div id="code">Quel est l animal qui miaule ?</div>
+
+    <script>
+        let map, circle, userMarker;
+        const userMarkers = {};
+
+        function initMap() {
+            const coords = { lat: 49.8449565, lng: 3.3098044 };
+            map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 18,
+                center: coords,
+                mapTypeId: 'satellite'
+            });
+
+            circle = new google.maps.Circle({
+                strokeColor: '#FF0000',
+                strokeOpacity: 0.8,
+                strokeWeight: 2,
+                fillColor: '#FF0000',
+                fillOpacity: 0.35,
+                map,
+                center: coords,
+                radius: 5
+            });
+
+            if (navigator.geolocation) {
+                navigator.geolocation.watchPosition(showPosition, showError, { enableHighAccuracy: true });
+            } else {
+                alert("La géolocalisation n'est pas supportée par ce navigateur.");
+            }
+        }
+
+        function showPosition(position) {
+            const userCoords = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+            };
+
+            if (!userMarker) {
+                userMarker = new google.maps.Marker({
+                    position: userCoords,
+                    map: map,
+                    title: "Votre position"
+                });
+            } else {
+                userMarker.setPosition(userCoords);
+            }
+
+            map.setCenter(userCoords);
+
+            const distance = google.maps.geometry.spherical.computeDistanceBetween(
+                new google.maps.LatLng(userCoords.lat, userCoords.lng),
+                circle.getCenter()
+            );
+
+            if (distance <= circle.getRadius()) {
+                document.getElementById('code').style.display = 'block';
+            } else {
+                document.getElementById('code').style.display = 'none';
+            }
+
+            updatePosition(userCoords);
+        }
+
+        function showError(error) {
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    alert("L'utilisateur a refusé la demande de géolocalisation.");
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    alert("Les informations de localisation ne sont pas disponibles.");
+                    break;
+                case error.TIMEOUT:
+                    alert("La demande de localisation a expiré.");
+                    break;
+                case error.UNKNOWN_ERROR:
+                    alert("Une erreur inconnue est survenue.");
+                    break;
+            }
+        }
+
+        function updatePosition(position) {
+            console.log("Position mise à jour : ", position);
+        }
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDt2I0f_PeVvfRj7MaIO2V_17hBeovo8OE&libraries=geometry&callback=initMap" async defer></script>
+</body>
+</html>
